@@ -47,6 +47,14 @@ public class AdministradorController extends GenericController<Administrador, Ad
         this.jwtService = jwtService;
     }
 
+        private Administrador toEntityConRol(AdministradorRequestDTO request) {
+        Administrador entity = mapper.toEntity(request);
+        if (request.rol() != null) {
+            entity.setRol(request.rol());
+        }
+        return entity;
+    }
+
     @Override
     protected AdministradorResponseDTO toDTO(Administrador entity) {
         return mapper.toResponseDTO(entity);
@@ -64,7 +72,7 @@ public class AdministradorController extends GenericController<Administrador, Ad
             throw new ResourceAlreadyExistsException(
                 "Ya existe un administrador con el email " + request.email());
         }
-        Administrador entity = mapper.toEntity(request);
+        Administrador entity = toEntityConRol(request);
         Administrador saved = service.save(entity);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(saved));
     }
@@ -83,7 +91,7 @@ public class AdministradorController extends GenericController<Administrador, Ad
                     "Ya existe un administrador con el email " + request.email());
             }
         }
-        List<Administrador> entities = requests.stream().map(mapper::toEntity).toList();
+        List<Administrador> entities = requests.stream().map(this::toEntityConRol).toList();
         List<Administrador> saved = service.saveAll(entities);
         return ResponseEntity.status(HttpStatus.CREATED).body(
             saved.stream().map(mapper::toResponseDTO).toList()

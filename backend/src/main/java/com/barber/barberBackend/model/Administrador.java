@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,4 +24,11 @@ public class Administrador extends Persona {
     private Long id;
     @Basic
     private String contrasenia;
+    @Enumerated(EnumType.STRING)
+    private Rol rol = Rol.VISOR;
+
+    public Administrador(Long id, String contrasenia) {
+        this.id = id;
+        this.contrasenia = contrasenia;
+    }
 }

@@ -51,16 +51,19 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/error").permitAll()
                 .requestMatchers("/ping").permitAll()
-                .requestMatchers(HttpMethod.POST, "/turnos").permitAll()
-                .requestMatchers(HttpMethod.GET, "/turnos/findDateTimes").permitAll()
-                .requestMatchers(HttpMethod.GET, "/servicios", "/servicios/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/administradores/login").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers("/estadisticas/**").hasRole("ADMIN")
+                .requestMatchers("/administradores/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/**").authenticated()
+                .requestMatchers("/turnos/**", "/clientes/**").hasAnyRole("ADMIN", "OPERADOR")
+                .anyRequest().hasRole("ADMIN")
             )
+            
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint((request, response, authException) -> {
                     ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);

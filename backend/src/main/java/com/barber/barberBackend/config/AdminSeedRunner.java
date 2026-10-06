@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import com.barber.barberBackend.model.Administrador;
 import com.barber.barberBackend.repository.IAdministradorRepository;
 import com.barber.barberBackend.service.AdministradorService;
+import com.barber.barberBackend.model.Rol;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,6 +48,7 @@ public class AdminSeedRunner implements CommandLineRunner {
         admin.setApellido("Por Defecto");
         admin.setEmail(seedEmail);
         admin.setContrasenia(seedPassword);
+        admin.setRol(Rol.ADMIN);
         service.save(admin);
 
         log.info("Administrador semilla creado: email={}", seedEmail);

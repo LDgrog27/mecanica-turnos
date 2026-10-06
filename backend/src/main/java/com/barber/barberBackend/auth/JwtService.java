@@ -7,6 +7,7 @@ import javax.crypto.SecretKey;
 import org.springframework.stereotype.Service;
 
 import com.barber.barberBackend.model.Administrador;
+import com.barber.barberBackend.model.Rol;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -25,9 +26,11 @@ public class JwtService {
 
     public String generateToken(Administrador admin) {
         Date now = new Date();
+        Rol rol = admin.getRol() != null ? admin.getRol() : Rol.VISOR;
         return Jwts.builder()
                 .subject(admin.getId().toString())
                 .claim("email", admin.getEmail())
+                .claim("rol", rol.name())
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + EXPIRATION_MS))
                 .signWith(secretKey)

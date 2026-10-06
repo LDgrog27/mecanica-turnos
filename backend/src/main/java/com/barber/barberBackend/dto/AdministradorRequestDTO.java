@@ -1,5 +1,7 @@
 package com.barber.barberBackend.dto;
 
+import com.barber.barberBackend.model.Rol;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.Email;
@@ -21,5 +23,11 @@ public record AdministradorRequestDTO(
     @Schema(description = "Contraseña en texto plano (se hashea antes de persistir)", example = "miPassword123")
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
-    String contrasenia
-) {}
+    String contrasenia,
+    @Schema(description = "Rol de la cuenta: ADMIN, OPERADOR o VISOR (si no se indica, VISOR)", example = "OPERADOR")
+    Rol rol
+) {
+    public AdministradorRequestDTO(String nombre, String apellido, String email, String contrasenia) {
+        this(nombre, apellido, email, contrasenia, null);
+    }
+}
