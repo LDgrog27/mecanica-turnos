@@ -47,9 +47,9 @@ public abstract class GenericController<T, DTO, ID extends Serializable, S exten
 
     @Operation(summary = "Obtener registros paginados")
     @ApiResponse(responseCode = "200", description = "Página de registros")
-    @GetMapping("{page}/{size}")
-    public ResponseEntity<Page<T>> getPage(@PathVariable int page, @PathVariable int size) {
-        return ResponseEntity.ok(service.findAll(page, size));
+        @GetMapping("{page}/{size}")
+    public ResponseEntity<Page<DTO>> getPage(@PathVariable int page, @PathVariable int size) {
+        return ResponseEntity.ok(service.findAll(page, size).map(this::toDTO));
     }
 
     @Operation(summary = "Verificar si un registro existe por ID")
