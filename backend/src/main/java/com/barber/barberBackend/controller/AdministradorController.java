@@ -109,6 +109,6 @@ public class AdministradorController extends GenericController<Administrador, Ad
         String token = jwtService.generateToken(admin);
         AdministradorResponseDTO dto = mapper.toResponseDTO(admin);
         return ResponseEntity.ok(new LoginResponseDTO(
-                dto.id(), dto.nombre(), dto.apellido(), dto.email(), token));
+                dto.id(), dto.nombre(), dto.apellido(), dto.email(), token, dto.rol()));
     }
 }
