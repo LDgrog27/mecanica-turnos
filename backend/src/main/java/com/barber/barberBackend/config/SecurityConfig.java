@@ -58,6 +58,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/administradores/login").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/estadisticas/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/administradores/**").denyAll()
+                .requestMatchers(HttpMethod.DELETE, "/administradores/**").denyAll()
                 .requestMatchers("/administradores/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/**").authenticated()
                 .requestMatchers("/turnos/**", "/clientes/**").hasAnyRole("ADMIN", "OPERADOR")

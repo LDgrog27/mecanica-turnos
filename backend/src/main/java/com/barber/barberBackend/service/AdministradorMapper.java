@@ -17,7 +17,8 @@ public class AdministradorMapper {
             admin.getNombre(),
             admin.getApellido(),
             admin.getEmail(),
-            rol
+            rol,
+            admin.estaActivo()
         );
     }
 

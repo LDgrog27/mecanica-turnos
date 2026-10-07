@@ -1,12 +1,14 @@
 package com.barber.barberBackend.service;
 
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.barber.barberBackend.exception.BusinessRuleViolationException;
 import com.barber.barberBackend.exception.InvalidCredentialsException;
+import com.barber.barberBackend.exception.ResourceNotFoundException;
 import com.barber.barberBackend.generics.GenericService;
 import com.barber.barberBackend.model.Administrador;
 import com.barber.barberBackend.repository.IAdministradorRepository;
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 @Service
 public class AdministradorService extends GenericService<Administrador, Long, IAdministradorRepository> implements IAdministradorService {
@@ -34,11 +36,36 @@ public class AdministradorService extends GenericService<Administrador, Long, IA
 
         Administrador administrador = adminRepository.findByEmail(email);
 
-        if (administrador == null || !passwordEncoder.matches(contrasenia, administrador.getContrasenia())) {
+        if (administrador == null
+                || !administrador.estaActivo()
+                || !passwordEncoder.matches(contrasenia, administrador.getContrasenia())) {
             throw new InvalidCredentialsException("Credenciales inválidas");
         }
 
         return administrador;
+    }
+
+    public Administrador cambiarContrasenia(Long id, String nuevaContrasenia) {
+        if (nuevaContrasenia == null || nuevaContrasenia.length() < 8) {
+            throw new BusinessRuleViolationException("La contraseña debe tener al menos 8 caracteres.");
+        }
+        Administrador admin = buscar(id);
+        admin.setContrasenia(passwordEncoder.encode(nuevaContrasenia));
+        return adminRepository.save(admin);
+    }
+
+    public Administrador cambiarEstado(Long id, boolean activo, String idSolicitante) {
+        Administrador admin = buscar(id);
+        if (!activo && String.valueOf(id).equals(idSolicitante)) {
+            throw new BusinessRuleViolationException("No podés desactivar tu propia cuenta.");
+        }
+        admin.setActivo(activo);
+        return adminRepository.save(admin);
+    }
+
+    private Administrador buscar(Long id) {
+        return adminRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe una cuenta con el id " + id));
     }
 
 }

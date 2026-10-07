@@ -14,7 +14,10 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.barber.barberBackend.auth.JwtService;
 import com.barber.barberBackend.dto.AdministradorRequestDTO;
 import com.barber.barberBackend.dto.AdministradorResponseDTO;
+import com.barber.barberBackend.dto.CambiarContraseniaRequestDTO;
+import com.barber.barberBackend.dto.CambiarEstadoRequestDTO;
 import com.barber.barberBackend.dto.LoginRequestDTO;
 import com.barber.barberBackend.dto.LoginResponseDTO;
 import com.barber.barberBackend.exception.ResourceAlreadyExistsException;
@@ -33,7 +38,7 @@ import com.barber.barberBackend.service.AdministradorService;
 
 @RestController
 @RequestMapping("/administradores")
-@Tag(name = "Administradores", description = "Gestión de administradores")
+@Tag(name = "Administradores", description = "Gestión de cuentas (ADMIN, OPERADOR y VISOR)")
 public class AdministradorController extends GenericController<Administrador, AdministradorResponseDTO, Long, AdministradorService> {
     private final AdministradorService service;
     private final AdministradorMapper mapper;
@@ -47,7 +52,7 @@ public class AdministradorController extends GenericController<Administrador, Ad
         this.jwtService = jwtService;
     }
 
-        private Administrador toEntityConRol(AdministradorRequestDTO request) {
+    private Administrador toEntityConRol(AdministradorRequestDTO request) {
         Administrador entity = mapper.toEntity(request);
         if (request.rol() != null) {
             entity.setRol(request.rol());
@@ -98,10 +103,36 @@ public class AdministradorController extends GenericController<Administrador, Ad
         );
     }
 
-    @Operation(summary = "Iniciar sesión", description = "Autentica un administrador por email y contraseña, devuelve JWT")
+    @Operation(summary = "Cambiar la contraseña de una cuenta (solo ADMIN)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Contraseña actualizada"),
+        @ApiResponse(responseCode = "400", description = "Contraseña inválida", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+        @ApiResponse(responseCode = "404", description = "Cuenta no encontrada", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+    })
+    @PutMapping("/{id}/contrasenia")
+    public ResponseEntity<Void> cambiarContrasenia(@PathVariable("id") Long id,
+            @RequestBody @Valid CambiarContraseniaRequestDTO request) {
+        service.cambiarContrasenia(id, request.contrasenia());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Activar o desactivar una cuenta (solo ADMIN)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Estado actualizado"),
+        @ApiResponse(responseCode = "400", description = "No se puede desactivar la propia cuenta", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+        @ApiResponse(responseCode = "404", description = "Cuenta no encontrada", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+    })
+    @PutMapping("/{id}/activo")
+    public ResponseEntity<AdministradorResponseDTO> cambiarEstado(@PathVariable("id") Long id,
+            @RequestBody @Valid CambiarEstadoRequestDTO request, Authentication authentication) {
+        Administrador actualizado = service.cambiarEstado(id, request.activo(), authentication.getName());
+        return ResponseEntity.ok(mapper.toResponseDTO(actualizado));
+    }
+
+    @Operation(summary = "Iniciar sesión", description = "Autentica una cuenta por email y contraseña, devuelve JWT")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Inicio de sesión exitoso"),
-        @ApiResponse(responseCode = "401", description = "Credenciales inválidas", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+        @ApiResponse(responseCode = "401", description = "Credenciales inválidas o cuenta desactivada", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO request) {

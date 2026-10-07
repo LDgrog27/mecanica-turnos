@@ -15,9 +15,15 @@ public record AdministradorResponseDTO(
     @Schema(description = "Email de la cuenta", example = "carlos.lopez@taller.com", requiredMode = Schema.RequiredMode.REQUIRED)
     String email,
     @Schema(description = "Rol de la cuenta: ADMIN, OPERADOR o VISOR", example = "OPERADOR")
-    Rol rol
+    Rol rol,
+    @Schema(description = "Si la cuenta está activa (una cuenta desactivada no puede iniciar sesión)", example = "true")
+    Boolean activo
 ) {
     public AdministradorResponseDTO(Long id, String nombre, String apellido, String email) {
-        this(id, nombre, apellido, email, null);
+        this(id, nombre, apellido, email, null, null);
+    }
+
+    public AdministradorResponseDTO(Long id, String nombre, String apellido, String email, Rol rol) {
+        this(id, nombre, apellido, email, rol, null);
     }
 }

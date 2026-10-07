@@ -2,13 +2,13 @@ package com.barber.barberBackend.model;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,9 +26,15 @@ public class Administrador extends Persona {
     private String contrasenia;
     @Enumerated(EnumType.STRING)
     private Rol rol = Rol.VISOR;
+    private Boolean activo = true;
 
     public Administrador(Long id, String contrasenia) {
         this.id = id;
         this.contrasenia = contrasenia;
+    }
+
+    /** Las cuentas anteriores a este cambio no tienen valor guardado: se consideran activas. */
+    public boolean estaActivo() {
+        return !Boolean.FALSE.equals(activo);
     }
 }
