@@ -1,22 +1,32 @@
 package com.barber.barberBackend.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.barber.barberBackend.exception.BusinessRuleViolationException;
+import com.barber.barberBackend.exception.CupoExcedidoException;
 import com.barber.barberBackend.generics.GenericService;
 import com.barber.barberBackend.model.Cliente;
 import com.barber.barberBackend.model.Turno;
 import com.barber.barberBackend.repository.IClienteRepository;
 import com.barber.barberBackend.repository.ITurnoRepository;
+
 @Service
 public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> implements ITurnoService {
 
+    private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
+
     private final ITurnoRepository turnoRepository;
     private final IClienteRepository clienteRepository;
+
+    @Value("${turnos.cupo-diario:8}")
+    private int cupoDiario = 8;
 
     public TurnoService(ITurnoRepository repository, IClienteRepository clienteRepository) {
         super(repository);
@@ -26,6 +36,10 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
 
     @Override
     public Turno save(Turno entity) {
+        return save(entity, false);
+    }
+
+    public Turno save(Turno entity, boolean confirmarExcedente) {
         Cliente cliente = entity.getCliente();
 
         if (cliente != null && cliente.getTelefono() == null) {
@@ -34,11 +48,10 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
 
         validateDateTime(entity.getFechaHora());
 
-        boolean turnoExists = turnoRepository.findDateTimes(entity.getFechaHora())
-                                        .stream()
-                                        .anyMatch(fechaHora -> fechaHora.equals(entity.getFechaHora()));
-        if (turnoExists) {
-            throw new BusinessRuleViolationException("Ya existe un turno para la fecha y hora especificada. Fecha y hora: " + entity.getFechaHora());
+        LocalDate dia = entity.getFechaHora().toLocalDate();
+        long turnosDelDia = turnoRepository.countByFechaHoraBetween(dia.atStartOfDay(), dia.atTime(23, 59, 59));
+        if (turnosDelDia >= cupoDiario && !confirmarExcedente) {
+            throw new CupoExcedidoException(cupoDiario, turnosDelDia, dia);
         }
 
         Cliente existingCliente = clienteRepository.findByTelefono(cliente.getTelefono());
@@ -55,15 +68,15 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
 
     @Override
     public void validateDateTime(LocalDateTime fechaHora) {
-        LocalTime hora = fechaHora.toLocalTime();
-        LocalTime horaApertura = LocalTime.of(13, 0);
-        LocalTime horaCierre = LocalTime.of(20, 0);
-
-        if (hora.isBefore(horaApertura) || hora.isAfter(horaCierre)) {
-            throw new BusinessRuleViolationException("La hora debe estar entre " + horaApertura + " y " + horaCierre + ".");
+        LocalDate hoy = LocalDate.now(ZONA_ARGENTINA);
+        if (fechaHora.toLocalDate().isBefore(hoy)) {
+            throw new BusinessRuleViolationException("La fecha del turno no puede ser anterior a hoy.");
         }
-        if (hora.getMinute() != 0 && hora.getMinute() != 30) {
-            throw new BusinessRuleViolationException("La hora debe ser en intervalos de 30 minutos.");
+
+        LocalTime hora = fechaHora.toLocalTime();
+        boolean horaValida = hora.equals(LocalTime.of(8, 0)) || hora.equals(LocalTime.of(9, 0));
+        if (!horaValida) {
+            throw new BusinessRuleViolationException("La hora de llegada debe ser 08:00 o 09:00.");
         }
     }
 
@@ -73,6 +86,4 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
         return turnoRepository.findDateTimes(ahora);
     }
 
-    
-    
 }

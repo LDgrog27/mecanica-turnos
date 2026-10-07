@@ -49,7 +49,12 @@ public class TurnoMapper {
             cliente != null ? cliente.getEmail() : null,
             servicio != null ? servicio.getId() : null,
             servicio != null ? servicio.getTipo() : null,
-            servicio != null ? servicio.getPrecio() : 0
+            servicio != null ? servicio.getPrecio() : 0,
+            entity.getPatente(),
+            entity.getMarca(),
+            entity.getModelo(),
+            entity.getAnio(),
+            entity.getColor()
         );
     }
 
@@ -64,6 +69,12 @@ public class TurnoMapper {
         cliente.setApellido(dto.apellidoCliente());
         cliente.setEmail(dto.emailCliente());
 
-        return new Turno(null, dto.fechaHora(), cliente, servicio);
+                Turno turno = new Turno(null, dto.fechaHora(), cliente, servicio);
+        turno.setPatente(dto.patente() == null ? null : dto.patente().replaceAll("[\\s-]", "").toUpperCase());
+        turno.setMarca(dto.marca());
+        turno.setModelo(dto.modelo());
+        turno.setAnio(dto.anio());
+        turno.setColor(dto.color());
+        return turno;
     }
 }

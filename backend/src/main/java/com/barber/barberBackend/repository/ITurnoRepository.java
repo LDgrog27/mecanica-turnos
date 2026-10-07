@@ -78,5 +78,6 @@ public interface ITurnoRepository extends GenericRepository<Turno, Long> {
      // Turnos Ocupados
      @Query("SELECT t.fechaHora FROM Turno t WHERE t.fechaHora >= :desde")
      List<LocalDateTime> findDateTimes(@Param("desde") LocalDateTime desde);
+         long countByFechaHoraBetween(LocalDateTime desde, LocalDateTime hasta);
      
 }

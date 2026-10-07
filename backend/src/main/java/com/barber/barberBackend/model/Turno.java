@@ -18,7 +18,10 @@ import lombok.Setter;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Entity
-@Table(indexes = @Index(name = "idx_turno_fechahora", columnList = "fechaHora"))
+@Table(indexes = {
+    @Index(name = "idx_turno_fechahora", columnList = "fechaHora"),
+    @Index(name = "idx_turno_patente", columnList = "patente")
+})
 public class Turno {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -29,4 +32,18 @@ public class Turno {
     private Cliente cliente;
     @ManyToOne
     private Servicio servicio;
+
+    // Datos del vehículo
+    private String patente;
+    private String marca;
+    private String modelo;
+    private Integer anio;
+    private String color;
+
+    public Turno(Long id, LocalDateTime fechaHora, Cliente cliente, Servicio servicio) {
+        this.id = id;
+        this.fechaHora = fechaHora;
+        this.cliente = cliente;
+        this.servicio = servicio;
+    }
 }

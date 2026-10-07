@@ -56,7 +56,7 @@ public class TurnoController extends GenericController<Turno, TurnoResponseDTO, 
     @PostMapping
     public ResponseEntity<TurnoResponseDTO> create(@RequestBody @Valid TurnoRequestDTO request) {
         Turno entity = mapper.toEntity(request);
-        Turno saved = service.save(entity);
+        Turno saved = service.save(entity, Boolean.TRUE.equals(request.confirmarExcedente()));
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(saved));
     }
 
