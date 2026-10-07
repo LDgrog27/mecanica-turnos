@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.barber.barberBackend.auth.JwtAuthenticationFilter;
 import com.barber.barberBackend.auth.JwtService;
+import com.barber.barberBackend.repository.IAdministradorRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
@@ -27,12 +28,15 @@ public class SecurityConfig {
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final IAdministradorRepository administradorRepository;
 
     public SecurityConfig(JwtService jwtService, ObjectMapper objectMapper,
-            @Qualifier(CorsConfig.CORS_SOURCE_BEAN) CorsConfigurationSource corsConfigurationSource) {
+            @Qualifier(CorsConfig.CORS_SOURCE_BEAN) CorsConfigurationSource corsConfigurationSource,
+            IAdministradorRepository administradorRepository) {
         this.jwtService = jwtService;
         this.objectMapper = objectMapper;
         this.corsConfigurationSource = corsConfigurationSource;
+        this.administradorRepository = administradorRepository;
     }
 
     @Bean
@@ -42,7 +46,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthFilter() {
-        return new JwtAuthenticationFilter(jwtService, objectMapper);
+        return new JwtAuthenticationFilter(jwtService, objectMapper, administradorRepository);
     }
 
     @Bean
@@ -51,10 +55,10 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
+            .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/error").permitAll()
                 .requestMatchers("/ping").permitAll()
+                .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.POST, "/administradores/login").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/estadisticas/**").hasRole("ADMIN")
@@ -65,7 +69,6 @@ public class SecurityConfig {
                 .requestMatchers("/turnos/**", "/clientes/**").hasAnyRole("ADMIN", "OPERADOR")
                 .anyRequest().hasRole("ADMIN")
             )
-            
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint((request, response, authException) -> {
                     ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
