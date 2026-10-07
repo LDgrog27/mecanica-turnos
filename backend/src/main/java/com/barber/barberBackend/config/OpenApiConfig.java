@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
@@ -19,20 +18,15 @@ import org.springdoc.core.customizers.OpenApiCustomizer;
 @Configuration
 @OpenAPIDefinition(
     info = @Info(
-        title = "Barbería API",
+        title = "API de Turnos del Taller",
         version = "1.0.0",
-        description = "API REST para la gestión de turnos, clientes y servicios de una barbería.",
-        contact = @Contact(
-            name = "Desarrollador",
-            email = "dev@barberia.com"
-        ),
+        description = "API REST para la gestión de turnos, clientes, servicios y PDF de diagnóstico de un taller mecánico. Roles: ADMIN, OPERADOR y VISOR.",
         license = @License(
-            name = "MIT"
+            name = "GPL-3.0"
         )
     ),
-        servers = {
-        @Server(url = "http://localhost:8080", description = "Entorno de desarrollo local"),
-        @Server(url = "https://barber-hair.onrender.com", description = "Producción (Render)")
+    servers = {
+        @Server(url = "http://localhost:8080", description = "Entorno de desarrollo local")
     }
 )
 @SecurityScheme(
@@ -63,9 +57,6 @@ public class OpenApiConfig {
 
     private static boolean isPublic(String path, HttpMethod method) {
         if (path.equals("/ping")) return true;
-        if (path.equals("/turnos/findDateTimes")) return true;
-        if (path.equals("/turnos") && method == HttpMethod.POST) return true;
-        if (path.startsWith("/servicios") && method == HttpMethod.GET) return true;
         if (path.equals("/administradores/login") && method == HttpMethod.POST) return true;
         return false;
     }
