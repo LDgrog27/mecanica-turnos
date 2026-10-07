@@ -2,6 +2,8 @@ package com.barber.barberBackend.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Turno registrado con datos del cliente y servicio")
@@ -20,8 +22,9 @@ public record TurnoResponseDTO(
     String emailCliente,
     @Schema(description = "ID del servicio reservado", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     Long idServicio,
-    @Schema(description = "Nombre del servicio", example = "Corte de pelo", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Nombre del servicio", example = "Cambio de aceite", requiredMode = Schema.RequiredMode.REQUIRED)
     String tipoServicio,
-    @Schema(description = "Precio del servicio", example = "1500.0", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Precio del servicio (solo lo ve ADMIN, para el resto es null)", example = "1500.0")
+    @JsonSerialize(using = PrecioSoloAdminSerializer.class)
     float precioServicio
 ) {}
