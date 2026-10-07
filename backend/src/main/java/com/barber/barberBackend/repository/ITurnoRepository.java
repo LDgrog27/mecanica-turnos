@@ -16,6 +16,7 @@ import com.barber.barberBackend.model.Turno;
 public interface ITurnoRepository extends GenericRepository<Turno, Long> {
      @Query("SELECT COUNT(t) FROM Turno t WHERE CAST(t.fechaHora AS date) = CAST(:fecha AS date)")
      int countByFecha(@Param("fecha") LocalDateTime fecha);
+
      @Query("""
      SELECT COALESCE(SUM(s.precio), 0)
      FROM Turno t
@@ -73,11 +74,20 @@ public interface ITurnoRepository extends GenericRepository<Turno, Long> {
      """)
      List<HorarioEstadisticaDTO> countTurnosByHorario(@Param("desde") LocalDateTime desde);
 
-
-
      // Turnos Ocupados
      @Query("SELECT t.fechaHora FROM Turno t WHERE t.fechaHora >= :desde")
      List<LocalDateTime> findDateTimes(@Param("desde") LocalDateTime desde);
-         long countByFechaHoraBetween(LocalDateTime desde, LocalDateTime hasta);
-     
+
+     // Cupo diario
+     long countByFechaHoraBetween(LocalDateTime desde, LocalDateTime hasta);
+
+     // Búsqueda por nombre del cliente o patente
+     @Query("""
+          SELECT t FROM Turno t
+          LEFT JOIN t.cliente c
+          WHERE t.patente LIKE :patenteLike
+             OR LOWER(CONCAT(c.nombre, ' ', c.apellido)) LIKE :textoLike
+          ORDER BY t.fechaHora DESC
+     """)
+     List<Turno> buscar(@Param("patenteLike") String patenteLike, @Param("textoLike") String textoLike);
 }

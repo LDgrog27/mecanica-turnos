@@ -21,6 +21,7 @@ import com.barber.barberBackend.repository.ITurnoRepository;
 public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> implements ITurnoService {
 
     private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
+    private static final int MAXIMO_RESULTADOS_BUSQUEDA = 100;
 
     private final ITurnoRepository turnoRepository;
     private final IClienteRepository clienteRepository;
@@ -84,6 +85,21 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
     public List<LocalDateTime> findDateTimes() {
         LocalDateTime ahora = LocalDateTime.now();
         return turnoRepository.findDateTimes(ahora);
+    }
+
+    public List<Turno> buscar(String q) {
+        if (q == null || q.isBlank()) {
+            return List.of();
+        }
+        String texto = q.trim().toLowerCase();
+        String patente = q.replaceAll("[\\s-]", "").toUpperCase();
+        if (patente.isEmpty()) {
+            return List.of();
+        }
+        return turnoRepository.buscar("%" + patente + "%", "%" + texto + "%")
+                .stream()
+                .limit(MAXIMO_RESULTADOS_BUSQUEDA)
+                .toList();
     }
 
 }

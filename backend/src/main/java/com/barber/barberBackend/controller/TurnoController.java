@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.barber.barberBackend.dto.TurnoRequestDTO;
@@ -51,7 +52,8 @@ public class TurnoController extends GenericController<Turno, TurnoResponseDTO, 
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Turno creado"),
         @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
-        @ApiResponse(responseCode = "404", description = "Servicio no encontrado", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+        @ApiResponse(responseCode = "404", description = "Servicio no encontrado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+        @ApiResponse(responseCode = "409", description = "Cupo diario completo (reenviar con confirmarExcedente=true)", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping
     public ResponseEntity<TurnoResponseDTO> create(@RequestBody @Valid TurnoRequestDTO request) {
@@ -73,6 +75,16 @@ public class TurnoController extends GenericController<Turno, TurnoResponseDTO, 
         return ResponseEntity.status(HttpStatus.CREATED).body(
             saved.stream().map(mapper::toResponseDTO).toList()
         );
+    }
+
+    @Operation(summary = "Buscar turnos por nombre del cliente o patente",
+               description = "Búsqueda parcial, sin distinguir mayúsculas. Devuelve primero los turnos más recientes (máximo 100).")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de turnos que coinciden (vacía si no hay coincidencias)")
+    })
+    @GetMapping("/buscar")
+    public List<TurnoResponseDTO> buscar(@RequestParam("q") String q) {
+        return service.buscar(q).stream().map(mapper::toResponseDTO).toList();
     }
 
     @Operation(summary = "Obtener fechas y horas ocupadas", description = "Devuelve una lista con las fechas y horas que ya tienen turno asignado")
