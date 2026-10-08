@@ -22,7 +22,7 @@ import com.barber.barberBackend.repository.ITurnoRepository;
 public class DocumentoTurnoService {
 
     private static final byte[] FIRMA_PDF = "%PDF-".getBytes(StandardCharsets.US_ASCII);
-    private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
+    private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Mexico_City");
 
     @Value("${documentos.max-bytes:5242880}")
     private long maxBytes;

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cuentas | Taller</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+  <div class="container-fluid py-4">
+
+    <!-- Barra superior -->
+    <nav class="navbar d-flex justify-content-between align-items-center px-4 mb-4">
+      <h5 class="mb-0 text-white">Cuentas</h5>
+      <div class="d-flex align-items-center gap-2">
+        <a href="./panel-turnos.html" class="btn btn-outline-light btn-sm">Turnos</a>
+        <a href="./panel-estadisticas.html" class="btn btn-outline-info btn-sm">Estadísticas</a>
+        <button type="button" class="btn btn-outline-light btn-sm" id="btn-salir">
+          <i class="bi bi-box-arrow-right me-1"></i>Salir
+        </button>
+      </div>
+    </nav>
+
+    <div class="card">
+      <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          Cuentas del sistema
+          <span class="badge ms-2" style="background-color: #ff6600;" id="total-cuentas">0</span>
+        </h5>
+        <button type="button" class="btn btn-primario" id="btn-nueva-cuenta">
+          <i class="bi bi-person-plus me-1"></i>Nueva cuenta
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover mb-0 align-middle">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-cuentas"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent text-white-50 small">
+        Las cuentas no se borran: se desactivan. Una cuenta desactivada no puede iniciar sesión.
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: nueva cuenta -->
+  <div class="modal fade" id="modalCuenta" tabindex="-1" aria-labelledby="modalCuentaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark border-warning">
+        <div class="modal-header border-warning">
+          <h5 class="modal-title text-warning" id="modalCuentaLabel">
+            <i class="bi bi-person-plus me-2"></i>Nueva cuenta
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="alerta-cuenta"></div>
+          <form id="formCuenta">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="cuentaNombre" class="form-label">Nombre *</label>
+                <input type="text" class="form-control" id="cuentaNombre" required maxlength="50">
+              </div>
+              <div class="col-md-6">
+                <label for="cuentaApellido" class="form-label">Apellido *</label>
+                <input type="text" class="form-control" id="cuentaApellido" required maxlength="50">
+              </div>
+              <div class="col-12">
+                <label for="cuentaEmail" class="form-label">Correo (es el usuario para entrar) *</label>
+                <input type="email" class="form-control" id="cuentaEmail" required autocomplete="off">
+              </div>
+              <div class="col-12">
+                <label for="cuentaClave" class="form-label">Contraseña * (mínimo 8 caracteres)</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="cuentaClave" required minlength="8" autocomplete="new-password">
+                  <button type="button" class="btn btn-secundario" data-clave-accion="ver" data-clave-campo="cuentaClave" title="Mostrar u ocultar"><i class="bi bi-eye"></i></button>
+                  <button type="button" class="btn btn-secundario" data-clave-accion="generar" data-clave-campo="cuentaClave">Generar</button>
+                  <button type="button" class="btn btn-secundario" data-clave-accion="copiar" data-clave-campo="cuentaClave" title="Copiar"><i class="bi bi-clipboard"></i></button>
+                </div>
+                <div class="form-text">Copiá o anotá la clave antes de guardar: después no se puede volver a ver.</div>
+              </div>
+              <div class="col-12">
+                <label for="cuentaRol" class="form-label">Rol *</label>
+                <select class="form-select" id="cuentaRol" required>
+                  <option value="OPERADOR" selected>Operador: toma y edita turnos</option>
+                  <option value="VISOR">Visor: solo consulta</option>
+                  <option value="ADMIN">Administrador: control total</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-warning">
+          <button type="button" class="btn btn-secundario" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formCuenta" class="btn btn-primario" id="btn-guardar-cuenta">
+            <i class="bi bi-check-lg me-1"></i>Crear cuenta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: cambiar contraseña -->
+  <div class="modal fade" id="modalClave" tabindex="-1" aria-labelledby="modalClaveLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark border-info">
+        <div class="modal-header border-info">
+          <h5 class="modal-title text-info" id="modalClaveLabel">
+            <i class="bi bi-key me-2"></i>Cambiar contraseña
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-white">Cuenta: <strong id="clave-cuenta"></strong></p>
+          <div id="alerta-clave"></div>
+          <form id="formClave">
+            <label for="claveNueva" class="form-label">Nueva contraseña * (mínimo 8 caracteres)</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="claveNueva" required minlength="8" autocomplete="new-password">
+              <button type="button" class="btn btn-secundario" data-clave-accion="ver" data-clave-campo="claveNueva" title="Mostrar u ocultar"><i class="bi bi-eye"></i></button>
+              <button type="button" class="btn btn-secundario" data-clave-accion="generar" data-clave-campo="claveNueva">Generar</button>
+              <button type="button" class="btn btn-secundario" data-clave-accion="copiar" data-clave-campo="claveNueva" title="Copiar"><i class="bi bi-clipboard"></i></button>
+            </div>
+            <div class="form-text">Copiá o anotá la clave antes de guardar: después no se puede volver a ver.</div>
+          </form>
+        </div>
+        <div class="modal-footer border-info">
+          <button type="button" class="btn btn-secundario" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formClave" class="btn btn-primario" id="btn-guardar-clave">
+            <i class="bi bi-check-lg me-1"></i>Guardar contraseña
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avisos -->
+  <div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMessage"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+  <script src="../js/cuentas.js" type="module"></script>
+</body>
+</html>

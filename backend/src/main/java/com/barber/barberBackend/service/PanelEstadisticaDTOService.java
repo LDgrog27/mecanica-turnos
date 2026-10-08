@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @Slf4j
 public class PanelEstadisticaDTOService implements IPanelEstadisticaDTO {
     // El servidor (Render) usa hora UTC: se fija la hora de Argentina para que "hoy" sea el día correcto
-    private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
+    private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Mexico_City");
 
     private final ITurnoRepository turnoRepository;
     private final IClienteRepository clienteRepository;

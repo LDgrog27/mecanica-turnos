@@ -1,4 +1,4 @@
-import { ENDPOINTS, HORARIOS_LABORALES, CUPO_DIARIO, MARCAS } from "./config.js";
+import { ENDPOINTS, HORARIOS_LABORALES, CUPO_DIARIO, MARCAS, REGION } from "./config.js";
 
 // ---------- Sesión y permisos ----------
 // Ocultar botones en pantalla es solo comodidad: los permisos reales los controla el backend.
@@ -95,16 +95,32 @@ function formatoTamanio(bytes) {
 function formatoPesos(numero) {
   if (numero === null || numero === undefined || Number.isNaN(Number(numero))) return "—";
   return new Intl.NumberFormat("es-AR", {
-    style: "currency", currency: "ARS", maximumFractionDigits: 0,
+    style: "currency", currency: REGION.moneda, maximumFractionDigits: 0,
   }).format(Number(numero));
 }
 
-// Arma el link de WhatsApp. Supone un número escrito como código de área + número (sin 0 ni 15).
-function linkWhatsApp(telefono) {
-  let digitos = String(telefono || "").replace(/\D/g, "").replace(/^0+/, "");
-  if (digitos.length < 8) return "";
-  if (!digitos.startsWith("54")) digitos = "549" + digitos;
-  return `https://wa.me/${digitos}`;
+// Arma el link de WhatsApp para México: código 52 + número de 10 dígitos.
+// Acepta formatos como "55 1234 5678", "+52 55 1234 5678", "044 55 1234 5678" o "52 1 55 1234 5678".
+// Arma el link de WhatsApp para cualquier número cargado: solo devuelve null si no hay ningún dígito.
+// - Números con "+" o "00" al inicio se toman como internacionales y se respetan.
+// - El resto se toma como número de México (código 52 + 10 dígitos).
+// "dudoso" = el número no tiene el formato esperado: el botón aparece igual, pero en amarillo.
+function datosWhatsApp(telefono) {
+  const texto = String(telefono || "").trim();
+  let digitos = texto.replace(/\D/g, "");
+  if (!digitos) return null;
+
+  if (texto.startsWith("+") || digitos.startsWith("00")) {
+    digitos = digitos.replace(/^00/, "");
+    if (digitos.length === 13 && digitos.startsWith("521")) digitos = "52" + digitos.slice(3);
+    return { url: `https://wa.me/${digitos}`, dudoso: digitos.length < 10 || digitos.length > 15 };
+  }
+
+  digitos = digitos.replace(/^(044|045|01)/, "").replace(/^0+/, "");
+  if (digitos.length === 13 && digitos.startsWith("521")) digitos = digitos.slice(3);
+  else if (digitos.length === 12 && digitos.startsWith("52")) digitos = digitos.slice(2);
+
+  return { url: `https://wa.me/${REGION.codigoTelefono}${digitos}`, dudoso: digitos.length !== 10 };
 }
 
 function avisar(mensaje, tipo = "success") {
@@ -242,7 +258,10 @@ function limpiarFiltros() {
 // ---------- Pantalla ----------
 function filaTurno(t) {
   const vehiculo = [t.marca, t.modelo].filter(Boolean).join(" ");
-  const wa = linkWhatsApp(t.telefono);
+  const wa = datosWhatsApp(t.telefono);
+  const textoWa = wa?.dudoso
+    ? "Abrir WhatsApp (el número no tiene el formato esperado: revisalo)"
+    : "Abrir WhatsApp";
   return `
     <tr>
       <td>${escapar(formatearFecha(t.fecha))}</td>
@@ -250,7 +269,7 @@ function filaTurno(t) {
       <td>
         <div>${escapar(t.cliente)}</div>
         <small class="text-muted">${escapar(t.telefono)}</small>
-        ${wa ? `<a href="${wa}" target="_blank" rel="noopener" class="ms-1 text-success" title="Abrir WhatsApp"><i class="bi bi-whatsapp"></i></a>` : ""}
+        ${wa ? `<a href="${wa.url}" target="_blank" rel="noopener" class="ms-1 text-success" title="Abrir WhatsApp"><i class="bi bi-whatsapp"></i></a>` : ""}
       </td>
       <td>
         <div><strong>${escapar(t.patente)}</strong></div>

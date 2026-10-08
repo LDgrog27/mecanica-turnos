@@ -21,7 +21,7 @@ import com.barber.barberBackend.repository.ITurnoRepository;
 @Service
 public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> implements ITurnoService {
 
-    private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
+    private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Mexico_City");
     private static final int MAXIMO_RESULTADOS_BUSQUEDA = 100;
 
     private final ITurnoRepository turnoRepository;

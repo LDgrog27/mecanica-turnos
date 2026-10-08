@@ -1,4 +1,4 @@
-import { ENDPOINTS } from "./config.js";
+import { ENDPOINTS, REGION } from "./config.js";
 
 // ---------- Sesión y permisos ----------
 // Las estadísticas (con dinero) son solo para el administrador.
@@ -28,13 +28,13 @@ function escapar(texto) {
 }
 
 function formatoPesos(numero) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency", currency: "ARS", maximumFractionDigits: 0,
+  return new Intl.NumberFormat(REGION.locale, {
+    style: "currency", currency: REGION.moneda, maximumFractionDigits: 0,
   }).format(Number(numero) || 0);
 }
 
 function formatoNumero(numero) {
-  return new Intl.NumberFormat("es-AR").format(Number(numero) || 0);
+  return new Intl.NumberFormat(REGION.locale).format(Number(numero) || 0);
 }
 
 function variacion(actual, anterior) {
@@ -138,7 +138,7 @@ function graficoIngresos(ingresosDiarios) {
       scales: {
         y: {
           beginAtZero: true,
-          ticks: { color: "white", callback: (v) => "$" + Number(v).toLocaleString("es-AR") },
+          ticks: { color: "white", callback: (v) => "$" + Number(v).toLocaleString(REGION.locale) },
           grid: { color: "rgba(255, 255, 255, 0.1)" },
         },
         x: { ticks: { color: "white" }, grid: { color: "rgba(255, 255, 255, 0.1)" } },

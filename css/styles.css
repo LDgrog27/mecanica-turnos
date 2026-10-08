@@ -362,3 +362,10 @@ footer {
     min-width: 3.2rem;
   }
 }
+
+/* Textos secundarios legibles sobre fondo oscuro */
+.text-muted,
+.text-body-secondary,
+.form-text:not(.text-danger) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}

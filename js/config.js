@@ -25,3 +25,10 @@ export const CUPO_DIARIO = 8;
 
 // Marcas con las que trabaja el taller (aparecen como opciones al cargar un turno).
 export const MARCAS = ['Audi', 'Seat', 'Volkswagen'];
+
+// Configuración regional del taller (Ciudad de México).
+export const REGION = {
+  locale: "es-MX",        // formato de números y fechas
+  moneda: "MXN",          // pesos mexicanos
+  codigoTelefono: "52",   // código de país para los links de WhatsApp
+};

@@ -19,6 +19,9 @@
         <a href="./panel-estadisticas.html" class="btn btn-outline-info btn-sm solo-admin d-none">
           <i class="bi bi-graph-up me-1"></i>Estadísticas
         </a>
+        <a href="./cuentas.html" class="btn btn-outline-info btn-sm solo-admin d-none">
+          <i class="bi bi-people me-1"></i>Cuentas
+        </a>
         <button type="button" class="btn btn-outline-success btn-sm" id="btn-refrescar" title="Actualizar datos">
           <i class="bi bi-arrow-clockwise"></i>
         </button>
@@ -165,8 +168,8 @@
                 <input type="text" class="form-control" id="nuevoApellido" required maxlength="50">
               </div>
               <div class="col-md-6">
-                <label for="nuevoTelefono" class="form-label">Teléfono (WhatsApp) *</label>
-                <input type="tel" class="form-control" id="nuevoTelefono" required pattern="[\d\-\+\(\)\s]+" placeholder="380-4123456">
+                <label for="nuevoTelefono" class="form-label">Teléfono (WhatsApp, 10 dígitos) *</label>
+                <input type="tel" class="form-control" id="nuevoTelefono" required pattern="[\d\-\+\(\)\s]+" placeholder="55 1234 5678">
               </div>
               <div class="col-md-6">
                 <label for="nuevoEmail" class="form-label">Email (opcional)</label>
