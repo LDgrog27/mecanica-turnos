@@ -72,6 +72,7 @@ public class SecurityConfig {
                 // Turnos y clientes: borrar y cargar en masa, solo ADMIN
                 .requestMatchers(HttpMethod.DELETE, "/turnos/**", "/clientes/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/turnos/all").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/turnos/**", "/clientes/**").denyAll()
                 // Turnos y clientes: crear y editar, ADMIN y OPERADOR
                 .requestMatchers("/turnos/**", "/clientes/**").hasAnyRole("ADMIN", "OPERADOR")
                 // Todo lo demás (servicios, etc.): solo ADMIN

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.barber.barberBackend.exception.BusinessRuleViolationException;
 import com.barber.barberBackend.exception.CupoExcedidoException;
+import com.barber.barberBackend.exception.ResourceNotFoundException;
 import com.barber.barberBackend.generics.GenericService;
 import com.barber.barberBackend.model.Cliente;
 import com.barber.barberBackend.model.Turno;
@@ -48,12 +49,7 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
         }
 
         validateDateTime(entity.getFechaHora());
-
-        LocalDate dia = entity.getFechaHora().toLocalDate();
-        long turnosDelDia = turnoRepository.countByFechaHoraBetween(dia.atStartOfDay(), dia.atTime(23, 59, 59));
-        if (turnosDelDia >= cupoDiario && !confirmarExcedente) {
-            throw new CupoExcedidoException(cupoDiario, turnosDelDia, dia);
-        }
+        controlarCupo(entity.getFechaHora().toLocalDate(), confirmarExcedente);
 
         Cliente existingCliente = clienteRepository.findByTelefono(cliente.getTelefono());
 
@@ -65,6 +61,56 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
         }
 
         return repository.save(entity);
+    }
+
+    /**
+     * Edita un turno existente. "nuevo" trae los datos nuevos (servicio ya resuelto,
+     * cliente sin guardar). La fecha y el cupo solo se controlan si cambió la fecha u hora,
+     * así se pueden corregir datos de turnos viejos sin que los rechace la regla de "no antes de hoy".
+     */
+    public Turno actualizar(Long id, Turno nuevo, boolean confirmarExcedente) {
+        Turno existente = turnoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe un turno con el id " + id));
+
+        Cliente datosCliente = nuevo.getCliente();
+        if (datosCliente == null || datosCliente.getTelefono() == null || datosCliente.getTelefono().isBlank()) {
+            throw new BusinessRuleViolationException("El cliente debe tener un Teléfono antes de guardar el turno.");
+        }
+
+        boolean cambioFechaHora = !nuevo.getFechaHora().equals(existente.getFechaHora());
+        if (cambioFechaHora) {
+            validateDateTime(nuevo.getFechaHora());
+            if (!nuevo.getFechaHora().toLocalDate().equals(existente.getFechaHora().toLocalDate())) {
+                controlarCupo(nuevo.getFechaHora().toLocalDate(), confirmarExcedente);
+            }
+        }
+
+        Cliente cliente = clienteRepository.findByTelefono(datosCliente.getTelefono());
+        if (cliente == null) {
+            cliente = new Cliente();
+            cliente.setTelefono(datosCliente.getTelefono());
+        }
+        cliente.setNombre(datosCliente.getNombre());
+        cliente.setApellido(datosCliente.getApellido());
+        cliente.setEmail(datosCliente.getEmail());
+        cliente = clienteRepository.save(cliente);
+
+        existente.setFechaHora(nuevo.getFechaHora());
+        existente.setServicio(nuevo.getServicio());
+        existente.setCliente(cliente);
+        existente.setPatente(nuevo.getPatente());
+        existente.setMarca(nuevo.getMarca());
+        existente.setModelo(nuevo.getModelo());
+        existente.setAnio(nuevo.getAnio());
+        existente.setColor(nuevo.getColor());
+        return turnoRepository.save(existente);
+    }
+
+    private void controlarCupo(LocalDate dia, boolean confirmarExcedente) {
+        long turnosDelDia = turnoRepository.countByFechaHoraBetween(dia.atStartOfDay(), dia.atTime(23, 59, 59));
+        if (turnosDelDia >= cupoDiario && !confirmarExcedente) {
+            throw new CupoExcedidoException(cupoDiario, turnosDelDia, dia);
+        }
     }
 
     @Override

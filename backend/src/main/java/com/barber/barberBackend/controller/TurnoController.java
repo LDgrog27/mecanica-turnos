@@ -17,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -60,6 +62,22 @@ public class TurnoController extends GenericController<Turno, TurnoResponseDTO, 
         Turno entity = mapper.toEntity(request);
         Turno saved = service.save(entity, Boolean.TRUE.equals(request.confirmarExcedente()));
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(saved));
+    }
+
+    @Operation(summary = "Editar un turno",
+               description = "Recibe los mismos datos que al crear. Si se cambia a un día con el cupo completo, hay que reenviar con confirmarExcedente=true.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Turno actualizado"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+        @ApiResponse(responseCode = "404", description = "Turno o servicio no encontrado", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+        @ApiResponse(responseCode = "409", description = "Cupo diario completo en la nueva fecha", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<TurnoResponseDTO> actualizar(@PathVariable("id") Long id,
+            @RequestBody @Valid TurnoRequestDTO request) {
+        Turno nuevo = mapper.toEntity(request);
+        Turno guardado = service.actualizar(id, nuevo, Boolean.TRUE.equals(request.confirmarExcedente()));
+        return ResponseEntity.ok(mapper.toResponseDTO(guardado));
     }
 
     @Operation(summary = "Crear múltiples turnos")
