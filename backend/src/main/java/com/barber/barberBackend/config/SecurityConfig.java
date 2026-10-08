@@ -56,17 +56,25 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Abierto sin sesión
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/ping").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.POST, "/administradores/login").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                // Solo ADMIN
                 .requestMatchers("/estadisticas/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/administradores/**").denyAll()
                 .requestMatchers(HttpMethod.DELETE, "/administradores/**").denyAll()
                 .requestMatchers("/administradores/**").hasRole("ADMIN")
+                // Consultas: los tres roles
                 .requestMatchers(HttpMethod.GET, "/**").authenticated()
+                // Turnos y clientes: borrar y cargar en masa, solo ADMIN
+                .requestMatchers(HttpMethod.DELETE, "/turnos/**", "/clientes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/turnos/all").hasRole("ADMIN")
+                // Turnos y clientes: crear y editar, ADMIN y OPERADOR
                 .requestMatchers("/turnos/**", "/clientes/**").hasAnyRole("ADMIN", "OPERADOR")
+                // Todo lo demás (servicios, etc.): solo ADMIN
                 .anyRequest().hasRole("ADMIN")
             )
             .exceptionHandling(exceptions -> exceptions
