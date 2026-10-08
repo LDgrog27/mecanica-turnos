@@ -1,4 +1,4 @@
-import { ENDPOINTS, HORARIOS_LABORALES, CUPO_DIARIO } from "./config.js";
+import { ENDPOINTS, HORARIOS_LABORALES, CUPO_DIARIO, MARCAS } from "./config.js";
 
 // ---------- Sesión y permisos ----------
 // Ocultar botones en pantalla es solo comodidad: los permisos reales los controla el backend.
@@ -460,6 +460,9 @@ function prepararFormulario() {
   document.getElementById("nuevoHora").innerHTML = HORARIOS_LABORALES
     .map((h) => `<option value="${escapar(h)}">${escapar(h)}</option>`)
     .join("");
+  document.getElementById("nuevoMarca").innerHTML =
+    `<option value="">Seleccionar marca</option>` +
+    MARCAS.map((m) => `<option value="${escapar(m)}">${escapar(m)}</option>`).join("");
   document.getElementById("nuevoFecha").min = fechaLocalISO();
 }
 
@@ -524,7 +527,14 @@ function abrirEdicion(id) {
   document.getElementById("nuevoTelefono").value = t.telefono;
   document.getElementById("nuevoEmail").value = t.email;
   document.getElementById("nuevoPatente").value = t.patente;
-  document.getElementById("nuevoMarca").value = t.marca;
+    const selectMarca = document.getElementById("nuevoMarca");
+  if (t.marca && ![...selectMarca.options].some((o) => o.value === t.marca)) {
+    selectMarca.insertAdjacentHTML(
+      "beforeend",
+      `<option value="${escapar(t.marca)}">${escapar(t.marca)} (marca anterior)</option>`
+    );
+  }
+  selectMarca.value = t.marca;
   document.getElementById("nuevoModelo").value = t.modelo;
   document.getElementById("nuevoAnio").value = t.anio ?? "";
   document.getElementById("nuevoColor").value = t.color;

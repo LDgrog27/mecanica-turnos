@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.barber.barberBackend.dto.HorarioEstadisticaDTO;
+import com.barber.barberBackend.dto.MarcaEstadisticaDTO;
 import com.barber.barberBackend.dto.ServicioEstadisticaDTO;
 import com.barber.barberBackend.generics.GenericRepository;
 import com.barber.barberBackend.model.Turno;
@@ -90,4 +91,25 @@ public interface ITurnoRepository extends GenericRepository<Turno, Long> {
           ORDER BY t.fechaHora DESC
      """)
      List<Turno> buscar(@Param("patenteLike") String patenteLike, @Param("textoLike") String textoLike);
+
+     // Turnos por marca de vehículo en un período
+     @Query("""
+          SELECT new com.barber.barberBackend.dto.MarcaEstadisticaDTO(t.marca, COUNT(t))
+          FROM Turno t
+          WHERE t.fechaHora >= :desde
+               AND t.fechaHora < :hasta
+          GROUP BY t.marca
+          ORDER BY COUNT(t) DESC
+     """)
+     List<MarcaEstadisticaDTO> countTurnosByMarca(
+          @Param("desde") LocalDateTime desde,
+          @Param("hasta") LocalDateTime hasta
+     );
+
+     // Fechas de los turnos de un período (sirve para contar turnos por día)
+     @Query("SELECT t.fechaHora FROM Turno t WHERE t.fechaHora >= :desde AND t.fechaHora < :hasta")
+     List<LocalDateTime> findFechasEntre(
+          @Param("desde") LocalDateTime desde,
+          @Param("hasta") LocalDateTime hasta
+     );
 }

@@ -22,3 +22,6 @@ export const HORARIOS_LABORALES = ['08:00', '09:00'];
 // Cantidad de turnos por día antes de pedir confirmación.
 // Solo sirve para mostrar el contador: el límite real lo controla el backend (turnos.cupo-diario).
 export const CUPO_DIARIO = 8;
+
+// Marcas con las que trabaja el taller (aparecen como opciones al cargar un turno).
+export const MARCAS = ['Audi', 'Seat', 'Volkswagen'];

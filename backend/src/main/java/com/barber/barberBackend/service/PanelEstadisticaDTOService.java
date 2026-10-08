@@ -1,6 +1,7 @@
 package com.barber.barberBackend.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,13 +23,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Slf4j
 public class PanelEstadisticaDTOService implements IPanelEstadisticaDTO {
+    // El servidor (Render) usa hora UTC: se fija la hora de Argentina para que "hoy" sea el día correcto
+    private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
+
     private final ITurnoRepository turnoRepository;
     private final IClienteRepository clienteRepository;
 
     @Override
     public PanelEstadisticaDTO obtenerPanelEstadisticaDTO() {
         try {
-            final LocalDateTime fechaActual = LocalDateTime.now();
+            final LocalDateTime fechaActual = LocalDateTime.now(ZONA_ARGENTINA);
             int turnosHoy = turnoRepository.countByFecha(fechaActual);
             int turnosAyer = turnoRepository.countByFecha(fechaActual.minusDays(1));
             double ingresosMes = turnoRepository.findIngresosByFecha(
