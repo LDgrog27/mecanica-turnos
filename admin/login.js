@@ -12,15 +12,27 @@ document
     this.textContent = type === "password" ? "👁️" : "🙈";
   });
 
-// Avisos dentro del formulario (en lugar de los carteles del navegador)
+// Avisos dentro del formulario (en lugar de los carteles del navegador).
+// Si el contenedor no existe en el HTML, se crea arriba del formulario.
+function contenedorAlerta() {
+  let contenedor = document.getElementById("alerta-login");
+  if (!contenedor) {
+    contenedor = document.createElement("div");
+    contenedor.id = "alerta-login";
+    const form = document.getElementById("loginForm");
+    form.parentNode.insertBefore(contenedor, form);
+  }
+  return contenedor;
+}
+
 function mostrarAlerta(texto) {
-  const contenedor = document.getElementById("alerta-login");
+  const contenedor = contenedorAlerta();
   contenedor.innerHTML = '<div class="alert alert-danger" role="alert"></div>';
   contenedor.firstElementChild.textContent = texto;
 }
 
 function limpiarAlerta() {
-  document.getElementById("alerta-login").innerHTML = "";
+  contenedorAlerta().innerHTML = "";
 }
 
 // Validación y envío del formulario
