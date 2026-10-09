@@ -82,7 +82,7 @@ function formatearFechaHora(iso) {
   if (!iso) return "";
   const fecha = new Date(String(iso).substring(0, 19));
   if (Number.isNaN(fecha.getTime())) return "";
-  return fecha.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+  return fecha.toLocaleString(REGION.locale, { dateStyle: "short", timeStyle: "short" });
 }
 
 function formatoTamanio(bytes) {
@@ -94,33 +94,30 @@ function formatoTamanio(bytes) {
 
 function formatoPesos(numero) {
   if (numero === null || numero === undefined || Number.isNaN(Number(numero))) return "—";
-  return new Intl.NumberFormat("es-AR", {
+  return new Intl.NumberFormat(REGION.locale, {
     style: "currency", currency: REGION.moneda, maximumFractionDigits: 0,
   }).format(Number(numero));
 }
 
-// Arma el link de WhatsApp para México: código 52 + número de 10 dígitos.
-// Acepta formatos como "55 1234 5678", "+52 55 1234 5678", "044 55 1234 5678" o "52 1 55 1234 5678".
-// Arma el link de WhatsApp para cualquier número cargado: solo devuelve null si no hay ningún dígito.
+// Arma el link de WhatsApp para cualquier número cargado: solo devuelve vacío si no hay ningún dígito.
 // - Números con "+" o "00" al inicio se toman como internacionales y se respetan.
-// - El resto se toma como número de México (código 52 + 10 dígitos).
-// "dudoso" = el número no tiene el formato esperado: el botón aparece igual, pero en amarillo.
-function datosWhatsApp(telefono) {
+// - El resto se toma como número de México (código 52 + 10 dígitos), sacando prefijos como 0, 044, 045 o 01.
+function linkWhatsApp(telefono) {
   const texto = String(telefono || "").trim();
   let digitos = texto.replace(/\D/g, "");
-  if (!digitos) return null;
+  if (!digitos) return "";
 
   if (texto.startsWith("+") || digitos.startsWith("00")) {
     digitos = digitos.replace(/^00/, "");
     if (digitos.length === 13 && digitos.startsWith("521")) digitos = "52" + digitos.slice(3);
-    return { url: `https://wa.me/${digitos}`, dudoso: digitos.length < 10 || digitos.length > 15 };
+    return `https://wa.me/${digitos}`;
   }
 
   digitos = digitos.replace(/^(044|045|01)/, "").replace(/^0+/, "");
   if (digitos.length === 13 && digitos.startsWith("521")) digitos = digitos.slice(3);
   else if (digitos.length === 12 && digitos.startsWith("52")) digitos = digitos.slice(2);
 
-  return { url: `https://wa.me/${REGION.codigoTelefono}${digitos}`, dudoso: digitos.length !== 10 };
+  return `https://wa.me/${REGION.codigoTelefono}${digitos}`;
 }
 
 function avisar(mensaje, tipo = "success") {
@@ -258,10 +255,7 @@ function limpiarFiltros() {
 // ---------- Pantalla ----------
 function filaTurno(t) {
   const vehiculo = [t.marca, t.modelo].filter(Boolean).join(" ");
-  const wa = datosWhatsApp(t.telefono);
-  const textoWa = wa?.dudoso
-    ? "Abrir WhatsApp (el número no tiene el formato esperado: revisalo)"
-    : "Abrir WhatsApp";
+  const wa = linkWhatsApp(t.telefono);
   return `
     <tr>
       <td>${escapar(formatearFecha(t.fecha))}</td>
@@ -269,7 +263,7 @@ function filaTurno(t) {
       <td>
         <div>${escapar(t.cliente)}</div>
         <small class="text-muted">${escapar(t.telefono)}</small>
-        ${wa ? `<a href="${wa.url}" target="_blank" rel="noopener" class="ms-1 text-success" title="Abrir WhatsApp"><i class="bi bi-whatsapp"></i></a>` : ""}
+        ${wa ? `<a href="${wa}" target="_blank" rel="noopener" class="ms-1 text-success" title="Abrir WhatsApp"><i class="bi bi-whatsapp"></i></a>` : ""}
       </td>
       <td>
         <div><strong>${escapar(t.patente)}</strong></div>
@@ -538,6 +532,15 @@ function abrirEdicion(id) {
     );
   }
 
+  // Lo mismo con la marca: si es una marca fuera de la lista, se agrega para no perderla
+  const selectMarca = document.getElementById("nuevoMarca");
+  if (t.marca && ![...selectMarca.options].some((o) => o.value === t.marca)) {
+    selectMarca.insertAdjacentHTML(
+      "beforeend",
+      `<option value="${escapar(t.marca)}">${escapar(t.marca)} (marca anterior)</option>`
+    );
+  }
+
   document.getElementById("nuevoFecha").value = t.fecha;
   selectHora.value = t.hora;
   document.getElementById("nuevoServicio").value = String(t.idServicio ?? "");
@@ -546,13 +549,6 @@ function abrirEdicion(id) {
   document.getElementById("nuevoTelefono").value = t.telefono;
   document.getElementById("nuevoEmail").value = t.email;
   document.getElementById("nuevoPatente").value = t.patente;
-    const selectMarca = document.getElementById("nuevoMarca");
-  if (t.marca && ![...selectMarca.options].some((o) => o.value === t.marca)) {
-    selectMarca.insertAdjacentHTML(
-      "beforeend",
-      `<option value="${escapar(t.marca)}">${escapar(t.marca)} (marca anterior)</option>`
-    );
-  }
   selectMarca.value = t.marca;
   document.getElementById("nuevoModelo").value = t.modelo;
   document.getElementById("nuevoAnio").value = t.anio ?? "";
@@ -561,6 +557,26 @@ function abrirEdicion(id) {
   titulosFormulario(true);
   actualizarHintCupo();
   abrirModal("modalNuevoTurno");
+}
+
+// Aviso de cupo completo dentro del formulario (no se abre otra ventana encima)
+function mostrarAvisoCupo(actuales, cupo) {
+  const alerta = document.getElementById("alerta-formulario");
+  alerta.innerHTML = `
+    <div class="alert alert-warning">
+      <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Cupo del día completo</div>
+      Ya hay ${escapar(actuales)} turnos tomados para ese día (cupo: ${escapar(cupo)}).
+      ¿Querés tomar este turno igual?
+      <div class="mt-2 d-flex gap-2">
+        <button type="button" class="btn btn-warning btn-sm" id="btn-confirmar-cupo">Sí, tomar el turno igual</button>
+        <button type="button" class="btn btn-secundario btn-sm" id="btn-cancelar-cupo">No, cambiar la fecha</button>
+      </div>
+    </div>`;
+  document.getElementById("btn-confirmar-cupo").addEventListener("click", () => guardarTurno(true));
+  document.getElementById("btn-cancelar-cupo").addEventListener("click", () => {
+    alerta.innerHTML = "";
+  });
+  alerta.scrollIntoView({ block: "nearest" });
 }
 
 async function guardarTurno(confirmarExcedente = false) {
@@ -604,10 +620,7 @@ async function guardarTurno(confirmarExcedente = false) {
     if (error.status === 409 && error.problema?.type === "/errors/cupo-excedido") {
       const actuales = error.problema.turnosActuales ?? "?";
       const cupo = error.problema.cupo ?? CUPO_DIARIO;
-      const seguir = window.confirm(
-        `Ya hay ${actuales} turnos tomados para ese día (cupo: ${cupo}).\n\n¿Estás seguro de que querés tomar este turno igual?`
-      );
-      if (seguir) await guardarTurno(true);
+      mostrarAvisoCupo(actuales, cupo);
       return;
     }
     const mensaje =

@@ -12,6 +12,17 @@ document
     this.textContent = type === "password" ? "👁️" : "🙈";
   });
 
+// Avisos dentro del formulario (en lugar de los carteles del navegador)
+function mostrarAlerta(texto) {
+  const contenedor = document.getElementById("alerta-login");
+  contenedor.innerHTML = '<div class="alert alert-danger" role="alert"></div>';
+  contenedor.firstElementChild.textContent = texto;
+}
+
+function limpiarAlerta() {
+  document.getElementById("alerta-login").innerHTML = "";
+}
+
 // Validación y envío del formulario
 document.getElementById("loginForm").addEventListener("submit", async function (e) {
   e.preventDefault();
@@ -20,6 +31,8 @@ document.getElementById("loginForm").addEventListener("submit", async function (
   const submitBtn = form.querySelector('button[type="submit"]');
   const loginText = submitBtn.querySelector(".login-text");
   const spinner = submitBtn.querySelector(".spinner-border");
+
+  limpiarAlerta();
 
   if (!form.checkValidity()) {
     e.stopPropagation();
@@ -45,11 +58,11 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     });
 
     if (response.status === 401) {
-      alert("Email o contraseña incorrectos, o la cuenta está desactivada.");
+      mostrarAlerta("Correo o contraseña incorrectos, o la cuenta está desactivada.");
       return;
     }
     if (!response.ok) {
-      alert("El servidor respondió con un error. Probá de nuevo en un momento.");
+      mostrarAlerta("El servidor respondió con un error. Probá de nuevo en un momento.");
       return;
     }
 
@@ -61,14 +74,11 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     localStorage.setItem("adminNombre", `${data.nombre} ${data.apellido}`);
     localStorage.setItem("adminRol", data.rol || "VISOR");
 
-    // El ADMIN entra a estadísticas; OPERADOR y VISOR entran a turnos
-    window.location.href =
-      data.rol === "ADMIN"
-        ? "/admin/panel-estadisticas.html"
-        : "/admin/panel-turnos.html";
+    // Todos los roles entran al panel de turnos
+    window.location.href = "/admin/panel-turnos.html";
   } catch (error) {
     console.error("Error:", error);
-    alert("No se pudo conectar con el servidor. Esperá unos segundos y probá de nuevo.");
+    mostrarAlerta("No se pudo conectar con el servidor. Esperá unos segundos y probá de nuevo.");
   } finally {
     submitBtn.disabled = false;
     loginText.classList.remove("d-none");
@@ -82,6 +92,7 @@ document.querySelectorAll(".form-control").forEach((input) => {
     if (this.classList.contains("is-invalid")) {
       this.classList.remove("is-invalid");
     }
+    limpiarAlerta();
   });
 });
 

@@ -86,6 +86,44 @@ function mensajeDeError(error, porDefecto) {
   return error.problema?.detail || error.problema?.title || porDefecto;
 }
 
+// Ventana de confirmación con el diseño del panel. Devuelve true si el usuario confirma.
+function confirmar({ titulo, mensaje, textoBoton, peligro = false }) {
+  return new Promise((resolve) => {
+    const modalEl = document.getElementById("modalConfirmar");
+    const color = peligro ? "danger" : "success";
+
+    modalEl.querySelector(".modal-content").className = `modal-content bg-dark border-${color}`;
+    modalEl.querySelector(".modal-header").className = `modal-header border-${color}`;
+    modalEl.querySelector(".modal-footer").className = `modal-footer border-${color}`;
+
+    const etiqueta = document.getElementById("modalConfirmarLabel");
+    etiqueta.className = `modal-title text-${color}`;
+    etiqueta.textContent = titulo;
+    document.getElementById("modalConfirmarTexto").textContent = mensaje;
+
+    const boton = document.getElementById("btnConfirmarAccion");
+    boton.className = `btn btn-${color}`;
+    boton.textContent = textoBoton;
+
+    let confirmado = false;
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    const alConfirmar = () => {
+      confirmado = true;
+      modal.hide();
+    };
+    boton.addEventListener("click", alConfirmar);
+    modalEl.addEventListener(
+      "hidden.bs.modal",
+      () => {
+        boton.removeEventListener("click", alConfirmar);
+        resolve(confirmado);
+      },
+      { once: true }
+    );
+    modal.show();
+  });
+}
+
 // Contraseña aleatoria sin caracteres que se confunden (0/O, 1/l/I)
 function generarClave(largo = 12) {
   const letras = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -226,10 +264,23 @@ async function guardarClave() {
 async function cambiarEstado(id, activo) {
   const c = cuentas.find((x) => x.id === id);
   if (!c) return;
-  const pregunta = activo
-    ? `¿Reactivar la cuenta de ${nombreCompleto(c)}?`
-    : `¿Desactivar la cuenta de ${nombreCompleto(c)}?\n\nNo podrá iniciar sesión y, si ya tenía una sesión abierta, dejará de funcionar de inmediato.`;
-  if (!window.confirm(pregunta)) return;
+
+  const confirmado = await confirmar(
+    activo
+      ? {
+          titulo: "Reactivar cuenta",
+          mensaje: `¿Reactivar la cuenta de ${nombreCompleto(c)}?\n\nVolverá a poder iniciar sesión con su contraseña actual.`,
+          textoBoton: "Reactivar",
+          peligro: false,
+        }
+      : {
+          titulo: "Desactivar cuenta",
+          mensaje: `¿Desactivar la cuenta de ${nombreCompleto(c)}?\n\nNo podrá iniciar sesión y, si ya tenía una sesión abierta, dejará de funcionar de inmediato.`,
+          textoBoton: "Desactivar",
+          peligro: true,
+        }
+  );
+  if (!confirmado) return;
 
   try {
     await api(`${ENDPOINTS.administradores}/${id}/activo`, {
