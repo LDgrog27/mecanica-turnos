@@ -305,15 +305,19 @@ function actualizarContadoresHoy() {
 function llenarSelectsServicio() {
   const opciones = servicios
     .map((s) => {
+      const activo = s.activo !== false;
       const precio = esAdmin && s.precio != null ? ` - ${formatoPesos(s.precio)}` : "";
-      return `<option value="${s.id}">${escapar(s.tipo)}${escapar(precio)}</option>`;
+      const etiqueta = `${s.tipo}${activo ? "" : " (inactivo)"}${precio}`;
+      return `<option value="${s.id}"${activo ? "" : " disabled"}>${escapar(etiqueta)}</option>`;
     })
     .join("");
   document.getElementById("nuevoServicio").innerHTML =
     `<option value="">Seleccionar servicio</option>${opciones}`;
   document.getElementById("filtro-servicio").innerHTML =
     `<option value="todos">Todos los servicios</option>` +
-    servicios.map((s) => `<option value="${s.id}">${escapar(s.tipo)}</option>`).join("");
+    servicios
+      .map((s) => `<option value="${s.id}">${escapar(s.tipo)}${s.activo === false ? " (inactivo)" : ""}</option>`)
+      .join("");
 }
 
 function buscarTurno(id) {

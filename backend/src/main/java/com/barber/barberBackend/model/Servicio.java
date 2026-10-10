@@ -22,4 +22,16 @@ public class Servicio {
     @Basic
     private String tipo;
     private float precio;
+    private Boolean activo = true;
+
+    public Servicio(Long id, String tipo, float precio) {
+        this.id = id;
+        this.tipo = tipo;
+        this.precio = precio;
+    }
+
+    /** Los servicios anteriores a este cambio no tienen valor guardado: se consideran activos. */
+    public boolean estaActivo() {
+        return !Boolean.FALSE.equals(activo);
+    }
 }

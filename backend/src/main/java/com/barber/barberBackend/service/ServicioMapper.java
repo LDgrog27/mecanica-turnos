@@ -10,7 +10,7 @@ import com.barber.barberBackend.model.Servicio;
 public class ServicioMapper {
 
     public ServicioResponseDTO toResponseDTO(Servicio entity) {
-        return new ServicioResponseDTO(entity.getId(), entity.getTipo(), entity.getPrecio());
+        return new ServicioResponseDTO(entity.getId(), entity.getTipo(), entity.getPrecio(), entity.estaActivo());
     }
 
     public Servicio toEntity(ServicioRequestDTO dto) {

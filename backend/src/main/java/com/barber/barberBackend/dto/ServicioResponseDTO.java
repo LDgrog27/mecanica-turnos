@@ -10,7 +10,13 @@ public record ServicioResponseDTO(
     Long id,
     @Schema(description = "Nombre o tipo de servicio", example = "Cambio de aceite", requiredMode = Schema.RequiredMode.REQUIRED)
     String tipo,
-    @Schema(description = "Precio del servicio en pesos (solo lo ve ADMIN, para el resto es null)", example = "1500.0")
+    @Schema(description = "Precio del servicio (solo lo ve ADMIN, para el resto es null)", example = "1500.0")
     @JsonSerialize(using = PrecioSoloAdminSerializer.class)
-    float precio
-) {}
+    float precio,
+    @Schema(description = "Si el servicio está activo (uno desactivado no se puede elegir en turnos nuevos)", example = "true")
+    Boolean activo
+) {
+    public ServicioResponseDTO(Long id, String tipo, float precio) {
+        this(id, tipo, precio, null);
+    }
+}
