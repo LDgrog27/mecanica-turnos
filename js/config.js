@@ -1,7 +1,7 @@
 // Dirección del backend.
 // En tu computadora (localhost o 127.0.0.1) usa el backend local.
-// En producción, reemplazá el texto de abajo por la dirección del servicio de Render del taller.
-const API_PRODUCCION = "https://REEMPLAZAR-CON-LA-URL-DE-RENDER";
+// En producción (SnapDeploy), usamos una ruta relativa vacía para que apunte al mismo servidor.
+const API_PRODUCCION = "";
 
 const API_BASE_URL = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
   ? "http://localhost:8080"
