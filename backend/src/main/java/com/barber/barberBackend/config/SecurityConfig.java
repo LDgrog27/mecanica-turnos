@@ -63,8 +63,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/administradores/login").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 
-                // 👇 PERMITE EL ACCESO AL FRONTEND ESTÁTICO 👇
-                .requestMatchers("/", "/index.html", "/admin/**", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                // Frontend estático y health check
+                .requestMatchers("/", "/index.html", "/admin/**", "/css/**", "/js/**", "/img/**",
+                "/404.html", "/contacto.html", "/reserva.html", "/reserva-confirmada.html",
+                "/favicon.ico", "/actuator/health").permitAll()
                 
                 // Solo ADMIN
                 .requestMatchers("/estadisticas/**").hasRole("ADMIN")
